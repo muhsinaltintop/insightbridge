@@ -1,10 +1,18 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(request) {
   try {
     const formData = await request.formData();
     const file = formData.get("file");
+    if (!file) {
+      return NextResponse.json(
+        { error: "No file uploaded" },
+        { status: 400 }
+      );
+    }
     const text = await file.text();
 
     const lines = text.trim().split("\n");

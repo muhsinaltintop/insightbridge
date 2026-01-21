@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 function sumMetric(rows, key) {
   return rows.reduce((acc, row) => acc + Number(row[key] || 0), 0);
