@@ -1,8 +1,11 @@
-import Dashboard from "./components/Dasboard";
+
+import Dashboard from "./components/Dashboard";
 import UploadCsv from "./components/UploadCsv";
 
 
+
 export default function Page() {
+  
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
