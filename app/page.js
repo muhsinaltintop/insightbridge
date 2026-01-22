@@ -1,5 +1,3 @@
-"use client";
-
 import Dashboard from "./components/Dasboard";
 import UploadCsv from "./components/UploadCsv";
 
