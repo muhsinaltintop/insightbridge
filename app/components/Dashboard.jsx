@@ -1,14 +1,49 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import DailyTable from "./DailyTable";
 import InsightSelector from "./InsightSelector";
+import { computeDerivedMetric } from "@/lib/computeMetrics";
+import InsightsPanel from "./InsightsPanel";
+import Metrics from "./Metrics";
+import { detectPossibleMetrics } from "@/lib/metrics";
 
 export default function Dashboard() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedInsights, setSelectedInsights] = useState([]);
   const [generationStatus, setGenerationStatus] = useState("");
+  const [derivedMetrics, setDerivedMetrics] = useState([]);
+  const [availableMetrics, setAvailableMetrics] = useState([]);
+  const [selectedMetricIds, setSelectedMetricIds] = useState([]);
+  const [error, setError] = useState("");
+  const [hasGenerated, setHasGenerated] = useState(false);
+
+  useEffect(() => {
+    if (!summary || !summary.daily || summary.daily.length === 0) {
+      setAvailableMetrics([]);
+      setSelectedMetricIds([]);
+      return;
+    }
+
+    const firstRow = summary.daily[0];
+    const columns = Object.keys(firstRow);
+    const days = summary.daily.length;
+
+    const metrics = detectPossibleMetrics(columns, days);
+
+    setAvailableMetrics(metrics);
+    setSelectedMetricIds([]); // ⬅️ default: nothing selected
+  }, [summary]);
+
+  let derived = [];
+
+  if (summary && summary.daily && selectedMetricIds.length > 0) {
+    derived = selectedMetricIds.map((id) => ({
+      id,
+      label: availableMetrics.find((m) => m.id === id)?.label,
+      data: computeDerivedMetric(id, summary.daily),
+    }));
+  }
 
   const fetchSummary = async () => {
     setLoading(true);
@@ -27,6 +62,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    console.log("Fetching summary...");
     fetchSummary();
   }, []);
 
@@ -44,9 +80,27 @@ export default function Dashboard() {
     // Sonraki adımda burada /api/ai-insight endpoint’ine istek atacağız.
     console.log("Selected insights:", selectedInsights);
     setGenerationStatus(
-      `Generate clicked for: ${selectedInsights.join(", ")} (AI wiring comes next)`
+      `Generate clicked for: ${selectedInsights.join(", ")} (AI wiring comes next)`,
     );
   };
+
+  useEffect(() => {
+    if (!hasGenerated) return;
+    if (!summary || !summary.daily) return;
+    if (!selectedMetricIds || selectedMetricIds.length === 0) return;
+
+    const derived = selectedMetricIds
+      .filter((id) => availableMetrics.find((m) => m.id === id)?.available)
+      .map((id) => ({
+        id,
+        label: availableMetrics.find((m) => m.id === id)?.label,
+        data: computeDerivedMetric(id, summary.daily),
+      }));
+
+    setDerivedMetrics(derived);
+  }, [hasGenerated, summary, selectedMetricIds]);
+
+  console.log("summary:", summary);
 
   return (
     <section className="space-y-4">
@@ -130,9 +184,7 @@ export default function Dashboard() {
               <p className="text-sm">
                 Conversion rate:{" "}
                 <span className="font-medium">
-                  {formatPercent(
-                    summary.previous_period.conversion_rate || 0
-                  )}
+                  {formatPercent(summary.previous_period.conversion_rate || 0)}
                 </span>
               </p>
             </div>
@@ -140,15 +192,23 @@ export default function Dashboard() {
 
           {/* Daily table */}
           <DailyTable daily={summary.daily} />
-
-          {/* Insight selector */}
-          <InsightSelector
-            daily={summary.daily}
-            selectedInsights={selectedInsights}
-            onSelectedChange={setSelectedInsights}
-            onGenerate={handleGenerateInsights}
-            generationStatus={generationStatus}
+          <Metrics
+            availableMetrics={availableMetrics}
+            selected={selectedMetricIds}
+            onToggle={(id) => {
+              setSelectedMetricIds((prev) =>
+                prev.includes(id)
+                  ? prev.filter((x) => x !== id)
+                  : [...prev, id],
+              );
+              setHasGenerated(false); // ⬅️ seçim değişti, sonuç artık geçersiz
+            }}
+            onGenerate={() => {
+              setHasGenerated(true); // ⬅️ artık üret
+            }}
           />
+
+          {hasGenerated && <InsightsPanel derivedMetrics={derivedMetrics} />}
         </div>
       )}
     </section>
