@@ -1,4 +1,6 @@
 "use client";
+
+import MetricLineChart from "./MetricLineChart";
 import { summarizeMetric } from "@/lib/insightUtils";
 
 export default function InsightsPanel({ derivedMetrics }) {
@@ -20,8 +22,9 @@ export default function InsightsPanel({ derivedMetrics }) {
         return (
           <div
             key={m.id}
-            className="p-3 rounded-lg border border-slate-200 space-y-2"
+            className="p-4 rounded-lg border border-slate-200 space-y-3"
           >
+            {/* Header */}
             <div className="flex items-center justify-between">
               <div className="font-medium text-slate-800">
                 {m.label}
@@ -41,6 +44,10 @@ export default function InsightsPanel({ derivedMetrics }) {
               )}
             </div>
 
+            {/* Chart */}
+            <MetricLineChart data={m.data} />
+
+            {/* Summary text */}
             <p className="text-sm text-slate-600">
               Latest value:{" "}
               <span className="font-medium">
@@ -48,7 +55,7 @@ export default function InsightsPanel({ derivedMetrics }) {
               </span>
             </p>
 
-            {/* Mini table – last 3 days */}
+            {/* Mini table */}
             <div className="text-xs text-slate-500">
               <table className="w-full">
                 <thead>

@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import DailyTable from "./DailyTable";
-import InsightSelector from "./InsightSelector";
 import { computeDerivedMetric } from "@/lib/computeMetrics";
 import InsightsPanel from "./InsightsPanel";
 import Metrics from "./Metrics";
 import { detectPossibleMetrics } from "@/lib/metrics";
+import AIChatbot from "./AIChatbot";
 
 export default function Dashboard() {
   const [summary, setSummary] = useState(null);
@@ -208,7 +208,12 @@ export default function Dashboard() {
             }}
           />
 
-          {hasGenerated && <InsightsPanel derivedMetrics={derivedMetrics} />}
+          {hasGenerated && (
+            <>
+              <InsightsPanel derivedMetrics={derivedMetrics} />
+              <AIChatbot />
+            </>
+          )}
         </div>
       )}
     </section>
